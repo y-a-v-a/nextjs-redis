@@ -9,14 +9,33 @@ const client = createClient();
 client.on('error', err => console.log('Redis Client Error', err));
 
 export default class CacheHandler {
-  constructor(_ctx: CacheHandlerContext) {
+  
+  ctx: CacheHandlerContext;
+
+  constructor(ctx: CacheHandlerContext) {
+    this.ctx = ctx;
+    if (ctx.maxMemoryCacheSize) {
+      console.warn('nextjs-redis ignores CacheHandlerContext.maxMemoryCacheSize');
+    }
+    if (ctx.serverDistDir) {
+      console.warn('nextjs-redis ignores CacheHandlerContext.serverDistDir');
+    }
+    if (ctx.flushToDisk) {
+      console.warn('nextjs-redis ignores CacheHandlerContext.flushToDisk');
+    }
+    if (ctx.fs) {
+      console.warn('nextjs-redis ignores CacheHandlerContext.fs');
+    }
+    if (ctx.dev) {
+      console.warn('nextjs-redis ignores CacheHandlerContext.dev');
+    }
     client.connect();
   }
 
   public async get(key: string): Promise<CacheHandlerValue | null> {
     logger(`get: ${key}`);
+    
     try {
-      
       const redisResponse = await client.get(key);
       if (redisResponse) {
         return JSON.parse(redisResponse);

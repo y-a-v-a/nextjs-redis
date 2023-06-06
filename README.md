@@ -1,11 +1,17 @@
 # NextJS Redis
 
-NextJS Incremental cache offloaded to Redis.
+NextJS Incremental cache offloaded to Redis. Better known as a package to be added to the `incrementalCacheHandlerPath` nextjs config file.
 
 Under development - not published (yet) - very basic – not used in production.
 
+Types are copied over from nextjs git repo.
+
 ```
 $ docker run --name some-redis -p 6379:6379 -d redis
+```
+
+```sh
+$ NEXT_RUNTIME=nodejs DEBUG='nextjs-redis' next start
 ```
 
 https://redis.io/docs/clients/nodejs/
