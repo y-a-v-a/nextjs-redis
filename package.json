@@ -2,13 +2,18 @@
   "name": "nextjs-redis",
   "version": "0.0.1",
   "description": "Redis cache for NextJS",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "keywords": [
+    "nextjs",
+    "redis",
+    "cache"
+  ],
   "scripts": {
-    "build": "tsc -p ."
+    "dev:build": "tsc -p ."
   },
   "type": "commonjs",
   "author": "Vincent Bruijn <vebruijn@gmail.com>",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "debug": "^4.3.4",
     "redis": "^4.6.7"
@@ -17,5 +22,9 @@
     "@types/debug": "^4.1.8",
     "@types/node": "^20.2.5",
     "typescript": "^5.1.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/y-a-v-a/nextjs-redis"
   }
 }
