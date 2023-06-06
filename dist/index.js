@@ -45,7 +45,23 @@ var logger = (0, debug_1.default)('nextjs-redis');
 var client = (0, redis_1.createClient)();
 client.on('error', function (err) { return console.log('Redis Client Error', err); });
 var CacheHandler = (function () {
-    function CacheHandler(_ctx) {
+    function CacheHandler(ctx) {
+        this.ctx = ctx;
+        if (ctx.maxMemoryCacheSize) {
+            console.warn('nextjs-redis ignores CacheHandlerContext.maxMemoryCacheSize');
+        }
+        if (ctx.serverDistDir) {
+            console.warn('nextjs-redis ignores CacheHandlerContext.serverDistDir');
+        }
+        if (ctx.flushToDisk) {
+            console.warn('nextjs-redis ignores CacheHandlerContext.flushToDisk');
+        }
+        if (ctx.fs) {
+            console.warn('nextjs-redis ignores CacheHandlerContext.fs');
+        }
+        if (ctx.dev) {
+            console.warn('nextjs-redis ignores CacheHandlerContext.dev');
+        }
         client.connect();
     }
     CacheHandler.prototype.get = function (key) {
