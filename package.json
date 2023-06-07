@@ -9,7 +9,7 @@
     "cache"
   ],
   "scripts": {
-    "dev:build": "tsc -p ."
+    "build": "tsc"
   },
   "type": "commonjs",
   "author": "Vincent Bruijn <vebruijn@gmail.com>",

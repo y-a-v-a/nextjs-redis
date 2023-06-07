@@ -86,7 +86,7 @@ var CacheHandler = (function () {
                         logger(e_1);
                         return [3, 4];
                     case 4:
-                        logger("key ".concat(key, " not found"));
+                        logger("data for key ".concat(key, " not found"));
                         return [2, null];
                 }
             });
@@ -100,12 +100,18 @@ var CacheHandler = (function () {
                     case 0:
                         logger("set: ".concat(key));
                         if (!data) return [3, 2];
-                        cacheData = { value: data, lastModified: Date.now() };
+                        cacheData = {
+                            value: data,
+                            lastModified: Date.now()
+                        };
                         return [4, client.set(key, JSON.stringify(cacheData))];
                     case 1:
                         _a.sent();
-                        _a.label = 2;
-                    case 2: return [2];
+                        return [3, 3];
+                    case 2:
+                        logger("set: ".concat(key, " - no data to store"));
+                        _a.label = 3;
+                    case 3: return [2];
                 }
             });
         });

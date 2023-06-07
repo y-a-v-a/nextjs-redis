@@ -1,5 +1,9 @@
 import { createClient } from 'redis';
-import {CacheHandlerContext,CacheHandlerValue,IncrementalCacheValue} from './types'
+import {
+  CacheHandlerContext,
+  CacheHandlerValue,
+  IncrementalCacheValue
+} from './types'
 import debug from 'debug';
 
 const logger = debug('nextjs-redis');
@@ -14,6 +18,7 @@ export default class CacheHandler {
 
   constructor(ctx: CacheHandlerContext) {
     this.ctx = ctx;
+    
     if (ctx.maxMemoryCacheSize) {
       console.warn('nextjs-redis ignores CacheHandlerContext.maxMemoryCacheSize');
     }
@@ -43,7 +48,7 @@ export default class CacheHandler {
     } catch(e) {
       logger(e);
     }
-    logger(`key ${key} not found`);
+    logger(`data for key ${key} not found`);
     return null;
   }
 
@@ -52,9 +57,16 @@ export default class CacheHandler {
     data: IncrementalCacheValue | null
   ): Promise<void> {
     logger(`set: ${key}`);
+
     if (data) {
-      const cacheData: CacheHandlerValue = {value:data, lastModified: Date.now()};
+      const cacheData: CacheHandlerValue = {
+        value:data,
+        lastModified: Date.now()
+      };
+      
       await client.set(key, JSON.stringify(cacheData));
+    } else {
+      logger(`set: ${key} - no data to store`);
     }
   }
 }
