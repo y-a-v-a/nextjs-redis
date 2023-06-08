@@ -13,28 +13,32 @@ const client = createClient();
 client.on('error', err => console.log('Redis Client Error', err));
 
 export default class CacheHandler {
-  
-  ctx: CacheHandlerContext;
+
+  private flushToDisk?: CacheHandlerContext['flushToDisk']
 
   constructor(ctx: CacheHandlerContext) {
-    this.ctx = ctx;
-    
+    if (ctx.flushToDisk) {
+      this.flushToDisk = !!ctx.flushToDisk;
+    }
+    if (ctx.dev) {
+      console.log(`Current mode: ${ctx.dev ? 'development' : 'non-development'}`);
+      if (ctx.dev) {
+        logger(`nextjs-redis does not work in development mode,
+just like NextJS LRU cache and file system cache do not work in development mode.`)
+      }
+    }
     if (ctx.maxMemoryCacheSize) {
       console.warn('nextjs-redis ignores CacheHandlerContext.maxMemoryCacheSize');
     }
     if (ctx.serverDistDir) {
       console.warn('nextjs-redis ignores CacheHandlerContext.serverDistDir');
     }
-    if (ctx.flushToDisk) {
-      console.warn('nextjs-redis ignores CacheHandlerContext.flushToDisk');
-    }
     if (ctx.fs) {
       console.warn('nextjs-redis ignores CacheHandlerContext.fs');
     }
-    if (ctx.dev) {
-      console.warn('nextjs-redis ignores CacheHandlerContext.dev');
-    }
-    client.connect();
+    client.connect()
+      .then(() => console.log('nextjs-redis connected to Redis server'))
+      .catch(() => console.error('Unable to connect to Redis server'));
   }
 
   public async get(key: string): Promise<CacheHandlerValue | null> {
@@ -48,7 +52,7 @@ export default class CacheHandler {
     } catch(e) {
       logger(e);
     }
-    logger(`data for key ${key} not found`);
+    logger(`no data found for key ${key}`);
     return null;
   }
 
@@ -57,6 +61,11 @@ export default class CacheHandler {
     data: IncrementalCacheValue | null
   ): Promise<void> {
     logger(`set: ${key}`);
+
+    if (!this.flushToDisk) {
+      logger(`flushToDisk is false, not storing data in Redis`);
+      return;
+    }
 
     if (data) {
       const cacheData: CacheHandlerValue = {
