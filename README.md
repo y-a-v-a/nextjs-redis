@@ -27,16 +27,21 @@ https://nextjs.org/docs/app/api-reference/next-config-js/incrementalCacheHandler
 
 ### NextJS Config
 
-In `next.config.js`
+In `next.config.js` in version 13 and higher, one needs to put an absolute path, or a path that can be resolved from the dist dir (usually `.next`). In order to use this package, the easiest way is to make a file in `src` and `import` and `export` this package again, for example named `CacheHandler.ts`
+
+```ts
+import CacheHandler from 'nextjs-redis';
+export CacheHandler;
+```
 
 ```js
 const config = {
   // ...
-  incrementalCacheHandlerPath: 'nextjs-redis',
+  incrementalCacheHandlerPath: 'CacheHandler.ts',
 }
 ```
 
-Lower than version 13, in `next.config.js`
+Lower than version 13, in `next.config.js` one can put the package's name, NextJS will just `require()` it.
 
 ```js
 const config = {
