@@ -1,4 +1,4 @@
-import { createClient } from 'redis';
+import { createClient, RedisClientType } from 'redis';
 import {
   CacheHandlerContext,
   CacheHandlerValue,
@@ -8,82 +8,93 @@ import debug from 'debug';
 
 const logger = debug('nextjs-redis');
 
-const client = createClient();
-
-client.on('error', err => console.log('Redis Client Error', err));
-
 export default class CacheHandler {
 
   private flushToDisk?: CacheHandlerContext['flushToDisk']
+
+  private client!: RedisClientType;
 
   constructor(ctx: CacheHandlerContext) {
     if (ctx.flushToDisk) {
       this.flushToDisk = !!ctx.flushToDisk;
     }
     if (ctx.dev) {
-      console.log(`Current mode: ${ctx.dev ? 'development' : 'non-development'}`);
+      logger.log(`Current mode: ${ctx.dev ? 'development' : 'non-development'}`);
       if (ctx.dev) {
-        logger(`nextjs-redis does not work in development mode,
-just like NextJS LRU cache and file system cache do not work in development mode.`)
+        logger.log(`Redis based cache does not work in development mode,`);
+        logger.log(
+          `just like NextJS LRU cache and file system cache do not work in development mode.`
+        );
       }
     }
     if (ctx.maxMemoryCacheSize) {
-      console.warn('nextjs-redis ignores CacheHandlerContext.maxMemoryCacheSize');
+      console.warn('Redis cache handler ignores CacheHandlerContext.maxMemoryCacheSize');
     }
     if (ctx.serverDistDir) {
-      console.warn('nextjs-redis ignores CacheHandlerContext.serverDistDir');
+      console.warn('Redis cache handler ignores CacheHandlerContext.serverDistDir');
     }
     if (ctx.fs) {
-      console.warn('nextjs-redis ignores CacheHandlerContext.fs');
+      console.warn('Redis cache handler ignores CacheHandlerContext.fs');
     }
-    client.connect()
-      .then(() => console.log('nextjs-redis connected to Redis server'))
+
+    if (!ctx.dev) {
+      this.initialize();
+    }
+  }
+
+  async initialize() {
+    this.client = createClient({
+      url: process.env.REDIS_URL || 'redis://0.0.0.0:6379',
+    });
+
+    this.client.on('error', err => console.error('Redis Client Error', err));
+
+    this.client
+      .connect()
+      .then(() => logger.log('Redis cache handler connected to Redis server'))
       .catch(() => console.error('Unable to connect to Redis server'));
+
+    process.on('SIGTERM', async () => {
+      await this.client.disconnect();
+    });
+
+    process.on('SIGINT', async () => {
+      await this.client.disconnect();
+    });
   }
 
   public async get(key: string): Promise<CacheHandlerValue | null> {
-    logger(`get: ${key}`);
-    
+    logger.log(`Redis get: ${key}`);
+
     try {
-      const redisResponse = await client.get(key);
+      const redisResponse = await this.client.get(key);
       if (redisResponse) {
         return JSON.parse(redisResponse);
       }
-    } catch(e) {
-      logger(e);
+    } catch (e) {
+      logger.log(e);
     }
-    logger(`no data found for key ${key}`);
+    logger.log(`Redis no data found for key ${key}`);
     return null;
   }
 
-  public async set(
-    key: string,
-    data: IncrementalCacheValue | null
-  ): Promise<void> {
-    logger(`set: ${key}`);
+  public async set(key: string, data: IncrementalCacheValue | null): Promise<void> {
+    logger.log(`Redis set: ${key}`);
 
     if (!this.flushToDisk) {
-      logger(`flushToDisk is false, not storing data in Redis`);
+      logger.log(`Redis flushToDisk is false, not storing data in Redis`);
       return;
     }
 
     if (data) {
       const cacheData: CacheHandlerValue = {
-        value:data,
-        lastModified: Date.now()
+        value: data,
+        lastModified: Date.now(),
       };
-      
-      await client.set(key, JSON.stringify(cacheData));
+
+      await this.client.set(key, JSON.stringify(cacheData));
     } else {
-      logger(`set: ${key} - no data to store`);
+      logger.log(`Redis set: ${key} - no data to store`);
     }
   }
 }
-
-process.on('SIGTERM', async () => {
-  await client.disconnect();
-});
-
-process.on('SIGINT',  async () => {
-  await client.disconnect();
-});
