@@ -27,7 +27,9 @@ https://nextjs.org/docs/app/api-reference/next-config-js/incrementalCacheHandler
 
 ### NextJS Config
 
-In `next.config.js` in version 13 and higher, one needs to put an absolute path, or a path that can be resolved from the dist dir (usually `.next`). In order to use this package, the easiest way is to make a file in `src` and `import` and `export` this package again, for example named `CacheHandler.ts`
+In `next.config.js` in version 13 and higher, one needs to put an absolute path, or a path that can be resolved from the dist dir (usually `.next`). In order to use this package, the easiest way is to make a file in `src` and `import` and `export` this package again, for example named `CacheHandler.ts`.
+This page cache only works when `fallback` is _not_ set to false in your `getStaticPaths`; it works either with `fallback: true` with explicit loading UI or when set to `fallback: 'blocking'`. See also the [documentation on fallback](https://nextjs.org/docs/pages/api-reference/functions/get-static-paths)
+
 
 ```ts
 import CacheHandler from 'nextjs-redis';
@@ -50,4 +52,10 @@ const config = {
     incrementalCacheHandlerPath: 'nextjs-redis',
   },
 }
+```
+
+```redis
+FLUSHDB
+GET /index
+KEYS *
 ```

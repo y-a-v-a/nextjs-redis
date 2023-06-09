@@ -18,15 +18,15 @@ export default class CacheHandler {
     if (ctx.flushToDisk) {
       this.flushToDisk = !!ctx.flushToDisk;
     }
+    logger(`Current mode: ${ctx.dev ? 'development' : 'non-development'}`);
+
     if (ctx.dev) {
-      logger(`Current mode: ${ctx.dev ? 'development' : 'non-development'}`);
-      if (ctx.dev) {
-        logger(`Redis based cache does not work in development mode,`);
-        logger(
-          `just like NextJS LRU cache and file system cache do not work in development mode.`
-        );
-      }
+      logger(`Redis based cache does not work in development mode,`);
+      logger(
+        `just like NextJS LRU cache and file system cache do not work in development mode.`
+      );
     }
+
     if (ctx.maxMemoryCacheSize) {
       console.warn('Redis cache handler ignores CacheHandlerContext.maxMemoryCacheSize');
     }
