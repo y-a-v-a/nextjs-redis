@@ -19,10 +19,10 @@ export default class CacheHandler {
       this.flushToDisk = !!ctx.flushToDisk;
     }
     if (ctx.dev) {
-      logger.log(`Current mode: ${ctx.dev ? 'development' : 'non-development'}`);
+      logger(`Current mode: ${ctx.dev ? 'development' : 'non-development'}`);
       if (ctx.dev) {
-        logger.log(`Redis based cache does not work in development mode,`);
-        logger.log(
+        logger(`Redis based cache does not work in development mode,`);
+        logger(
           `just like NextJS LRU cache and file system cache do not work in development mode.`
         );
       }
@@ -51,7 +51,7 @@ export default class CacheHandler {
 
     this.client
       .connect()
-      .then(() => logger.log('Redis cache handler connected to Redis server'))
+      .then(() => logger('Redis cache handler connected to Redis server'))
       .catch(() => console.error('Unable to connect to Redis server'));
 
     process.on('SIGTERM', async () => {
@@ -64,7 +64,7 @@ export default class CacheHandler {
   }
 
   public async get(key: string): Promise<CacheHandlerValue | null> {
-    logger.log(`Redis get: ${key}`);
+    logger(`Redis get: ${key}`);
 
     try {
       const redisResponse = await this.client.get(key);
@@ -72,17 +72,17 @@ export default class CacheHandler {
         return JSON.parse(redisResponse);
       }
     } catch (e) {
-      logger.log(e);
+      logger(e);
     }
-    logger.log(`Redis no data found for key ${key}`);
+    logger(`Redis no data found for key ${key}`);
     return null;
   }
 
   public async set(key: string, data: IncrementalCacheValue | null): Promise<void> {
-    logger.log(`Redis set: ${key}`);
+    logger(`Redis set: ${key}`);
 
     if (!this.flushToDisk) {
-      logger.log(`Redis flushToDisk is false, not storing data in Redis`);
+      logger(`Redis flushToDisk is false, not storing data in Redis`);
       return;
     }
 
@@ -94,7 +94,7 @@ export default class CacheHandler {
 
       await this.client.set(key, JSON.stringify(cacheData));
     } else {
-      logger.log(`Redis set: ${key} - no data to store`);
+      logger(`Redis set: ${key} - no data to store`);
     }
   }
 }

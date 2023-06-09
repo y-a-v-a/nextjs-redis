@@ -48,10 +48,10 @@ var CacheHandler = (function () {
             this.flushToDisk = !!ctx.flushToDisk;
         }
         if (ctx.dev) {
-            logger.log("Current mode: ".concat(ctx.dev ? 'development' : 'non-development'));
+            logger("Current mode: ".concat(ctx.dev ? 'development' : 'non-development'));
             if (ctx.dev) {
-                logger.log("Redis based cache does not work in development mode,");
-                logger.log("just like NextJS LRU cache and file system cache do not work in development mode.");
+                logger("Redis based cache does not work in development mode,");
+                logger("just like NextJS LRU cache and file system cache do not work in development mode.");
             }
         }
         if (ctx.maxMemoryCacheSize) {
@@ -77,7 +77,7 @@ var CacheHandler = (function () {
                 this.client.on('error', function (err) { return console.error('Redis Client Error', err); });
                 this.client
                     .connect()
-                    .then(function () { return logger.log('Redis cache handler connected to Redis server'); })
+                    .then(function () { return logger('Redis cache handler connected to Redis server'); })
                     .catch(function () { return console.error('Unable to connect to Redis server'); });
                 process.on('SIGTERM', function () { return __awaiter(_this, void 0, void 0, function () {
                     return __generator(this, function (_a) {
@@ -109,7 +109,7 @@ var CacheHandler = (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        logger.log("Redis get: ".concat(key));
+                        logger("Redis get: ".concat(key));
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, 3, , 4]);
@@ -122,10 +122,10 @@ var CacheHandler = (function () {
                         return [3, 4];
                     case 3:
                         e_1 = _a.sent();
-                        logger.log(e_1);
+                        logger(e_1);
                         return [3, 4];
                     case 4:
-                        logger.log("Redis no data found for key ".concat(key));
+                        logger("Redis no data found for key ".concat(key));
                         return [2, null];
                 }
             });
@@ -137,9 +137,9 @@ var CacheHandler = (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        logger.log("Redis set: ".concat(key));
+                        logger("Redis set: ".concat(key));
                         if (!this.flushToDisk) {
-                            logger.log("Redis flushToDisk is false, not storing data in Redis");
+                            logger("Redis flushToDisk is false, not storing data in Redis");
                             return [2];
                         }
                         if (!data) return [3, 2];
@@ -152,7 +152,7 @@ var CacheHandler = (function () {
                         _a.sent();
                         return [3, 3];
                     case 2:
-                        logger.log("Redis set: ".concat(key, " - no data to store"));
+                        logger("Redis set: ".concat(key, " - no data to store"));
                         _a.label = 3;
                     case 3: return [2];
                 }
