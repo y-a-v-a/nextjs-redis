@@ -42,6 +42,30 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var redis_1 = require("redis");
 var debug_1 = __importDefault(require("debug"));
 var logger = (0, debug_1.default)('nextjs-redis');
+var client = (0, redis_1.createClient)({
+    url: process.env.REDIS_URL || 'redis://0.0.0.0:6379',
+});
+client.on('error', function (err) { return console.error('Redis Client Error', err); });
+process.on('SIGTERM', function () { return __awaiter(void 0, void 0, void 0, function () {
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0: return [4, client.disconnect()];
+            case 1:
+                _a.sent();
+                return [2];
+        }
+    });
+}); });
+process.on('SIGINT', function () { return __awaiter(void 0, void 0, void 0, function () {
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0: return [4, client.disconnect()];
+            case 1:
+                _a.sent();
+                return [2];
+        }
+    });
+}); });
 var CacheHandler = (function () {
     function CacheHandler(ctx) {
         if (ctx.flushToDisk) {
@@ -67,36 +91,13 @@ var CacheHandler = (function () {
     }
     CacheHandler.prototype.initialize = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var _this = this;
             return __generator(this, function (_a) {
-                this.client = (0, redis_1.createClient)({
-                    url: process.env.REDIS_URL || 'redis://0.0.0.0:6379',
-                });
-                this.client.on('error', function (err) { return console.error('Redis Client Error', err); });
-                this.client
-                    .connect()
-                    .then(function () { return logger('Redis cache handler connected to Redis server'); })
-                    .catch(function () { return console.error('Unable to connect to Redis server'); });
-                process.on('SIGTERM', function () { return __awaiter(_this, void 0, void 0, function () {
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0: return [4, this.client.disconnect()];
-                            case 1:
-                                _a.sent();
-                                return [2];
-                        }
-                    });
-                }); });
-                process.on('SIGINT', function () { return __awaiter(_this, void 0, void 0, function () {
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0: return [4, this.client.disconnect()];
-                            case 1:
-                                _a.sent();
-                                return [2];
-                        }
-                    });
-                }); });
+                if (!(client === null || client === void 0 ? void 0 : client.isOpen)) {
+                    client
+                        .connect()
+                        .then(function () { return logger('Redis cache handler connected to Redis server'); })
+                        .catch(function () { return console.error('Unable to connect to Redis server'); });
+                }
                 return [2];
             });
         });
@@ -111,7 +112,7 @@ var CacheHandler = (function () {
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, 3, , 4]);
-                        return [4, this.client.get(key)];
+                        return [4, client.get(key)];
                     case 2:
                         redisResponse = _a.sent();
                         if (redisResponse) {
@@ -145,7 +146,7 @@ var CacheHandler = (function () {
                             value: data,
                             lastModified: Date.now(),
                         };
-                        return [4, this.client.set(key, JSON.stringify(cacheData))];
+                        return [4, client.set(key, JSON.stringify(cacheData))];
                     case 1:
                         _a.sent();
                         return [3, 3];

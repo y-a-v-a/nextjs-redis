@@ -1,4 +1,4 @@
-import { createClient, RedisClientType } from 'redis';
+import { createClient } from 'redis';
 import {
   CacheHandlerContext,
   CacheHandlerValue,
@@ -8,11 +8,23 @@ import debug from 'debug';
 
 const logger = debug('nextjs-redis');
 
+const client = createClient({
+  url: process.env.REDIS_URL || 'redis://0.0.0.0:6379',
+});
+
+client.on('error', err => console.error('Redis Client Error', err));
+
+process.on('SIGTERM', async () => {
+  await client.disconnect();
+});
+
+process.on('SIGINT', async () => {
+  await client.disconnect();
+});
+
 export default class CacheHandler {
 
   private flushToDisk?: CacheHandlerContext['flushToDisk']
-
-  private client!: RedisClientType;
 
   constructor(ctx: CacheHandlerContext) {
     if (ctx.flushToDisk) {
@@ -43,31 +55,19 @@ export default class CacheHandler {
   }
 
   async initialize() {
-    this.client = createClient({
-      url: process.env.REDIS_URL || 'redis://0.0.0.0:6379',
-    });
-
-    this.client.on('error', err => console.error('Redis Client Error', err));
-
-    this.client
-      .connect()
-      .then(() => logger('Redis cache handler connected to Redis server'))
-      .catch(() => console.error('Unable to connect to Redis server'));
-
-    process.on('SIGTERM', async () => {
-      await this.client.disconnect();
-    });
-
-    process.on('SIGINT', async () => {
-      await this.client.disconnect();
-    });
+    if (!client?.isOpen) {
+      client
+        .connect()
+        .then(() => logger('Redis cache handler connected to Redis server'))
+        .catch(() => console.error('Unable to connect to Redis server'));
+    }
   }
 
   public async get(key: string): Promise<CacheHandlerValue | null> {
     logger(`Redis get: ${key}`);
 
     try {
-      const redisResponse = await this.client.get(key);
+      const redisResponse = await client.get(key);
       if (redisResponse) {
         return JSON.parse(redisResponse);
       }
@@ -92,7 +92,7 @@ export default class CacheHandler {
         lastModified: Date.now(),
       };
 
-      await this.client.set(key, JSON.stringify(cacheData));
+      await client.set(key, JSON.stringify(cacheData));
     } else {
       logger(`Redis set: ${key} - no data to store`);
     }

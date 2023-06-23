@@ -8,38 +8,46 @@ Under development - not published (yet) - very basic – not used in production.
 
 Types are copied over from nextjs git repo.
 
-```
-$ docker run --name some-redis -p 6379:6379 -d redis
-```
 
 ```sh
-$ NEXT_RUNTIME=nodejs DEBUG='nextjs-redis' next start
+$ NODE_ENV=production NEXT_RUNTIME=nodejs DEBUG='nextjs-redis' next start
 ```
-
-https://redis.io/docs/clients/nodejs/
-
-https://redis.io/docs/data-types/strings/
 
 https://github.com/vercel/next.js/blob/canary/packages/next/src/server/response-cache/index.ts
 
 https://nextjs.org/docs/app/api-reference/next-config-js/incrementalCacheHandlerPath
 
 
-### NextJS Config
+## NextJS Config
 
 In `next.config.js` in version 13 and higher, one needs to put an absolute path, or a path that can be resolved from the dist dir (usually `.next`). In order to use this package, the easiest way is to make a file in `src` and `import` and `export` this package again, for example named `CacheHandler.ts`.
 This page cache only works when `fallback` is _not_ set to false in your `getStaticPaths`; it works either with `fallback: true` with explicit loading UI or when set to `fallback: 'blocking'`. See also the [documentation on fallback](https://nextjs.org/docs/pages/api-reference/functions/get-static-paths)
 
 
+Contrary to what NextJS documentation says, for version v13.4.6, one still needs to add `incrementalCacheHandlerPath` to the `experimantal` configuration entry in `next.config.js`.
+
 ```ts
 import CacheHandler from 'nextjs-redis';
-export CacheHandler;
+export default CacheHandler;
+```
+
+or
+
+```javascript
+const CacheHandler = require('nextjs-redis');
+module.exports = CacheHandler;
 ```
 
 ```js
 const config = {
   // ...
-  incrementalCacheHandlerPath: 'CacheHandler.ts',
+  experimental: {
+    incrementalCacheHandlerPath: 'CacheHandler.ts',
+    // or:
+    // incrementalCacheHandlerPath: '/absolute/path/to/CacheHandler.cjs',
+    // or:
+    // incrementalCacheHandlerPath: require.resolve('CacheHandler.js'),
+  }
 }
 ```
 
@@ -53,6 +61,16 @@ const config = {
   },
 }
 ```
+
+## Set up Redis
+
+The easiest way to test locally is by starting a Redis image via Docker
+
+```
+$ docker run --name some-redis -p 6379:6379 -d redis
+```
+
+Some `redis-cli` commands for introspection:
 
 ```redis
 FLUSHDB
